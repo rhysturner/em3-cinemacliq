@@ -39,6 +39,7 @@ a {
 
 <body>
   <div id="ui">
+    <div id="info"></div>
     <div id="vr-button"></div>
     <a id="magic-window" href="#">Try it without a headset</a>
   </div>
@@ -216,6 +217,17 @@ a {
 
 
   function onLoad() {
+
+    if (navigator.getVRDevices) {
+      navigator.getVRDevices().then(vrDeviceCallback);
+    } else if (navigator.mozGetVRDevices) {
+      navigator.mozGetVRDevices(vrDeviceCallback);
+    } else {
+      var div = document.getElementById('info');
+      // div.innerHTML = div.innerHTML + "\n<br /> [H] Toggle info and cursor - [F] Enter fullscreen mode";
+      div.innerHTML = div.innerHTML + "\n<br />A <a href=http://webvr.info>WebVR compatible browser</a> is required for VR mode";
+    }
+
     // Setup three.js WebGL renderer. Note: Antialiasing is a big performance hit.
     // Only enable it if you actually need to.
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -287,6 +299,27 @@ a {
 
   }
 
+  function vrDeviceCallback(vrdevs) {
+    vrSupported = true;
+
+    for (var i = 0; i < vrdevs.length; ++i) {
+      if (vrdevs[i] instanceof HMDVRDevice) {
+        vrHMD = vrdevs[i];
+        break;
+      }
+    }
+    for (var i = 0; i < vrdevs.length; ++i) {
+      if (vrdevs[i] instanceof PositionSensorVRDevice &&
+        vrdevs[i].hardwareUnitId == vrHMD.hardwareUnitId) {
+        vrHMDSensor = vrdevs[i];
+        break;
+      }
+    }
+    vrrenderer = new THREE.VRRenderer(renderer, vrHMD);
+    var div = document.getElementById('info');
+    div.innerHTML = div.innerHTML + "\n<br /> [F] Enter VR Mode - [R] Reset sensor orientation";
+  }
+
   function initHopy() {
     // renderCanvas = document.getElementById("render-canvas");
 
@@ -334,14 +367,14 @@ a {
     }
 
     // Setup listeners
-    // document.addEventListener('mousemove', onDocumentMouseMove, false);
-    // document.addEventListener('touchstart', onDocumentTouchStart, false);
-    // document.addEventListener('touchmove', onDocumentTouchMove, false);
+    document.addEventListener('mousemove', onDocumentMouseMove, false);
+    document.addEventListener('touchstart', onDocumentTouchStart, false);
+    document.addEventListener('touchmove', onDocumentTouchMove, false);
     // document.addEventListener('webkitfullscreenchange', onFullscreenChange, false);
     // document.addEventListener('mozfullscreenchange', onFullscreenChange, false);
     // window.addEventListener('resize', onWindowResize, false);
-    // window.addEventListener('keypress', onKeyPress, false);
-    // window.addEventListener('keydown', onKeyDown, false);
+    window.addEventListener('keypress', onKeyPress, false);
+    window.addEventListener('keydown', onKeyDown, false);
 
     setInterval(updateOrbit, 7000);
 
@@ -470,7 +503,7 @@ a {
     // call the proper renderer
     if (vrEnabled) {
       vrrenderer.render(scene, camera);
-    } 
+    }
     else {
       renderer.render(scene, camera);
     }
@@ -572,6 +605,65 @@ a {
     c = C_MIN + Math.random() * (C_MAX - C_MIN);
     d = D_MIN + Math.random() * (D_MAX - D_MIN);
     e = E_MIN + Math.random() * (E_MAX - E_MIN);
+  }
+
+
+  ///////////////////////////////////////////////
+  // Event listeners
+  ///////////////////////////////////////////////
+  function onDocumentMouseMove(event) {
+    mouseX = event.clientX - windowHalfX;
+    mouseY = event.clientY - windowHalfY;
+  }
+
+  function onDocumentTouchStart(event) {
+    if (event.touches.length == 1) {
+      event.preventDefault();
+      mouseX = event.touches[0].pageX - windowHalfX;
+      mouseY = event.touches[0].pageY - windowHalfY;
+    }
+  }
+
+  function onDocumentTouchMove(event) {
+    if (event.touches.length == 1) {
+      event.preventDefault();
+      mouseX = event.touches[0].pageX - windowHalfX;
+      mouseY = event.touches[0].pageY - windowHalfY;
+    }
+  }
+  function onKeyDown(event) {
+    // hande up/down/left/right keys
+    if (event.keyCode == 38 && speed < 20) speed += 0.5;
+    else if (event.keyCode == 40 && speed > 0) speed -= 0.5;
+    else if (event.keyCode == 37) rotationSpeed += 0.001;
+    else if (event.keyCode == 39) rotationSpeed -= 0.001;
+  }
+
+  function onKeyPress(event) {
+    // handle 'f'
+    if (event.which == 70 || event.which == 102) {
+      if (vrEnabled || isFullscreen) {
+        exitFullscreen();
+      } else if (vrSupported) {
+        if (renderCanvas.mozRequestFullScreen) {
+          renderCanvas.mozRequestFullScreen({
+            vrDisplay: vrHMD
+          });
+        } else if (renderCanvas.webkitRequestFullscreen) {
+          renderCanvas.webkitRequestFullscreen({
+            vrDisplay: vrHMD,
+          });
+        }
+      } else {
+        launchIntoFullscreen(renderCanvas);
+      }
+    } else if (vrEnabled && (event.which == 82 || event.which == 114)) {
+      // handle 'z'
+      vrHMDSensor.zeroSensor();
+    } else if (!isFullscreen && (event.which == 72 || event.which == 104)) {
+      // handle 'h'
+      toggleVisuals();
+    }
   }
 
   function onTextureLoaded(texture) {

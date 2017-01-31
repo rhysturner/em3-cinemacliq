@@ -1,10 +1,15 @@
 {
-  "name": "webvr-boilerplate",
-  "version": "0.5.0",
-  "description": "A starting point for cross-platform web-based VR experiences.",
-  "main": "index.html",
+  "name": "em3-cinimaqliq",
+  "version": "0.0.1",
+  "description": "em3-cinimaqliq EM3 based on webvr-boilerplate: A starting point for cross-platform web-based VR experiences.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
+    "ejs": "^2.5.5",
     "es6-promise": "latest",
+    "express": "^4.14.1",
     "three": "latest",
     "webvr-polyfill": "latest",
     "webvr-ui": "latest"
@@ -16,13 +21,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/googlevr/webvr-boilerplate.git"
+    "url": "git+https://github.com/rhysturner/em3-cinemacliq"
   },
-  "keywords": ["vr"],
-  "author": "Boris Smus <boris@smus.com>",
+  "keywords": [
+    "vr"
+  ],
+  "author": "Rhys Turner <rhys.turnstylez@gmail.com>",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/googlevr/webvr-boilerplate/issues"
+    "url": "https://github.com/rhysturner/em3-cinemacliq/issues"
   },
-  "homepage": "https://github.com/googlevr/webvr-boilerplate#readme"
+  "homepage": "https://github.com/rhysturner/em3-cinemacliq#readme"
 }

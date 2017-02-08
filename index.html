@@ -279,6 +279,7 @@ a {
     vrButton.on('exit', function () {
       camera.quaternion.set(0, 0, 0, 1);
       camera.position.set(0, controls.userHeight, 0);
+      launchIntoFullscreen(renderCanvas);
     });
     vrButton.on('hide', function () {
       document.getElementById('ui').style.display = 'none';
@@ -370,11 +371,11 @@ a {
     document.addEventListener('mousemove', onDocumentMouseMove, false);
     // document.addEventListener('touchstart', onDocumentTouchStart, false);
     // document.addEventListener('touchmove', onDocumentTouchMove, false);
-    // document.addEventListener('webkitfullscreenchange', onFullscreenChange, false);
-    // document.addEventListener('mozfullscreenchange', onFullscreenChange, false);
-    // window.addEventListener('resize', onWindowResize, false);
-    // window.addEventListener('keypress', onKeyPress, false);
-    // window.addEventListener('keydown', onKeyDown, false);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange, false);
+    document.addEventListener('mozfullscreenchange', onFullscreenChange, false);
+    window.addEventListener('resize', onWindowResize, false);
+    window.addEventListener('keypress', onKeyPress, false);
+    window.addEventListener('keydown', onKeyDown, false);
 
     setInterval(updateOrbit, 7000);
 
@@ -383,7 +384,8 @@ a {
   function render() {
     requestAnimationFrame(render);
 
-    if (vrEnabled && vrHMDSensor) {
+    // if (vrEnabled && vrHMDSensor) {
+    if (vrEnabled) {
       // get state
       var state = vrHMDSensor.getState();
 
@@ -631,6 +633,91 @@ a {
       mouseY = event.touches[0].pageY - windowHalfY;
     }
   }
+
+  // Find the right method, call on correct element
+  function launchIntoFullscreen(element) {
+    if (element.requestFullscreen) {
+      element.requestFullscreen();
+    } else if (element.mozRequestFullScreen) {
+      element.mozRequestFullScreen();
+    } else if (element.webkitRequestFullscreen) {
+      element.webkitRequestFullscreen();
+    } else if (element.msRequestFullscreen) {
+      element.msRequestFullscreen();
+    }
+  }
+
+  // Whack fullscreen
+  function exitFullscreen() {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    }
+  }
+
+  function onFullscreenChange() {
+    if (!document.webkitFullscreenElement && !document.mozFullScreenElement) {
+      isFullscreen = false;
+      renderCanvas.style.cursor = "";
+      if (vrSupported) {
+        vrEnabled = false;
+        // unhide the mouse and set the device pixel ratio correctly
+        renderer.devicePixelRatio = window.devicePixelRatio || 1;
+      }
+    } else {
+      isFullscreen = true;
+      renderCanvas.style.cursor = "none";
+      if (vrSupported) {
+        vrEnabled = true;
+        // reset the sensor on enable
+        vrHMDSensor.zeroSensor();
+        // reset the camera position
+        camera.position.set(0, 0, SCALE_FACTOR / 2);
+        // hide the mouse, and set the device pixel ratio to 1
+        renderer.devicePixelRatio = 1;
+      }
+    }
+    // force resolution change
+    onWindowResize();
+  }
+
+  function onWindowResize(event) {
+    renderTargetWidth = window.innerWidth;
+    renderTargetHeight = window.innerHeight;
+    windowHalfX = window.innerWidth / 2;
+    windowHalfY = window.innerHeight / 2;
+
+    // use recommended render target size if in VR
+    if (vrEnabled) {
+      if ('getRecommendedEyeRenderRect' in vrHMD) {
+        var leftEyeViewport = vrHMD.getRecommendedEyeRenderRect("left");
+        var rightEyeViewport = vrHMD.getRecommendedEyeRenderRect("right");
+        renderTargetWidth = leftEyeViewport.width + rightEyeViewport.width;
+        renderTargetHeight = Math.max(leftEyeViewport.height, rightEyeViewport.height);
+      }
+      // only scale the sprites to half the size for VR
+      SPRITE_SIZE = Math.ceil(3 * renderTargetWidth / 3200);
+    } else {
+      SPRITE_SIZE = Math.ceil(3 * renderTargetWidth / 1600);
+    }
+
+    // rescale sprites for new resolution
+    for (var i = 0; i < scene.children.length; i++) {
+      scene.children[i].myMaterial.size = SPRITE_SIZE;
+    }
+
+    // update camera
+    camera.aspect = renderTargetWidth / renderTargetHeight;
+    camera.updateProjectionMatrix();
+
+    // change render target size
+    renderer.setSize(renderTargetWidth, renderTargetHeight);
+    renderer.setViewport(0, 0, renderTargetWidth, renderTargetHeight);
+  }
+
   function onKeyDown(event) {
     // hande up/down/left/right keys
     if (event.keyCode == 38 && speed < 20) speed += 0.5;

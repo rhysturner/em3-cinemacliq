@@ -66,7 +66,7 @@ var isFullscreen = false;
 var FRACTALS = {
 
 
-    getHoplaFractals: function (_scene) {
+    getHoplaFractals: function (_scene, _renderer) {
 
         this.scene = _scene;
 
@@ -83,16 +83,25 @@ var FRACTALS = {
             orbit.subsets.push(subsetPoints);
         }
 
-        this.init(_scene, this.sprite1);
+        new THREE.TextureLoader().load('./galaxy.png', (tex) => {
+            console.log("texture loaded", tex )
+            // this.sprite1 = tex;
+            this.init(_scene, tex, _renderer);
+        });
+        // console.log("Fractals sprite1", this.sprite1);
+
 
     },
 
-    init: function (_scene, _sprite) {
-        console.log("Fractals init", _scene);
-        this.SPRITE_SIZE = Math.ceil(3 * this.renderTargetWidth / 1600);
-        this.sprite1 = new THREE.TextureLoader().load('./galaxy.png', this.loadTexture);
+    init: function (_scene, _sprite, _renderer) {
 
-        console.log("Fractals sprite1", this.sprite1);
+        this.renderTargetWidth = window.innerWidth;
+        this.renderTargetHeight = window.innerHeight;
+        this.SPRITE_SIZE = Math.ceil(3 * renderTargetHeight / 1600);
+        console.log("Fractals init scene:", _scene, "SPRITE_SIZE:", this.SPRITE_SIZE);
+        // console.log("_sprite", _sprite);
+
+        _renderer.setSize(renderTargetWidth, renderTargetHeight);
 
         this.generateOrbit();
 
@@ -103,7 +112,7 @@ var FRACTALS = {
             for (var s = 0; s < NUM_SUBSETS; s++) {
                 var geometry = new THREE.Geometry();
                 for (var i = 0; i < NUM_POINTS_SUBSET; i++) { geometry.vertices.push(orbit.subsets[s][i].vertex); }
-                var materials = new THREE.PointsMaterial({ size: (SPRITE_SIZE), map: this.sprite1, blending: THREE.AdditiveBlending, depthTest: false, transparent: true });
+                var materials = new THREE.PointsMaterial({ size: (SPRITE_SIZE), map: _sprite, blending: THREE.AdditiveBlending, depthTest: false, transparent: true });
                 THREE.ColorConverter.setHSV(materials.color, hueValues[s], DEF_SATURATION, DEF_BRIGHTNESS);
                 var particles = new THREE.Points(geometry, materials);
                 particles.myMaterial = materials;

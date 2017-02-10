@@ -303,7 +303,7 @@
 
         new THREE.TextureLoader().load('galaxy.png', (tex) => {
             sprite1 = tex;
-            console.log("texture loaded sprite1", sprite1);
+            // console.log("texture loaded sprite1", sprite1);
             initFractals();
             // render();
         });
@@ -314,7 +314,7 @@
 
         // renderer.setSize(renderTargetWidth, renderTargetHeight);
         this.SPRITE_SIZE = Math.ceil(3 * renderTargetHeight / 1600);
-        console.log("Fractals init scene:", scene, "SPRITE_SIZE:", this.SPRITE_SIZE);
+        // console.log("Fractals init scene:", scene, "SPRITE_SIZE:", this.SPRITE_SIZE);
         // camera = new THREE.PerspectiveCamera(60, renderTargetWidth / renderTargetHeight, 1, 3 * SCALE_FACTOR);
         // camera.position.set(0, 0, SCALE_FACTOR / 2);
         // scene.fog = new THREE.FogExp2(0x000000, 0.0012);
@@ -331,7 +331,7 @@
                 var materials = new THREE.PointsMaterial({ size: (SPRITE_SIZE), map: sprite1, blending: THREE.AdditiveBlending, depthTest: false, transparent: true });
                 THREE.ColorConverter.setHSV(materials.color, hueValues[s], DEF_SATURATION, DEF_BRIGHTNESS);
                 var particles = new THREE.Points(geometry, materials);
-                console.log("geometry", geometry);
+                // console.log("geometry", geometry);
                 particles.myMaterial = materials;
                 particles.myLevel = k;
                 particles.mySubset = s;
@@ -398,7 +398,9 @@
                 if (scene.children[i].needsUpdate == 1) {
                     // update the geometry and color
                     scene.children[i].geometry.verticesNeedUpdate = true;
-                    THREE.ColorConverter.setHSV(scene.children[i].myMaterial.color, hueValues[scene.children[i].mySubset], DEF_SATURATION, DEF_BRIGHTNESS);
+                    // console.log("scene.children[i].myMaterial.color", i, scene.children[i].myMaterial.color);
+                    if(scene.children[i].myMaterial)
+                        THREE.ColorConverter.setHSV(scene.children[i].myMaterial.color, hueValues[scene.children[i].mySubset], DEF_SATURATION, DEF_BRIGHTNESS);
                     scene.children[i].needsUpdate = 0;
                 }
             }
@@ -535,9 +537,9 @@
         });
 
         // Align the skybox to the floor (which is at y=0).
-        skybox = new THREE.Mesh(geometry, material);
-        skybox.position.y = boxSize / 2;
-        scene.add(skybox);
+        // skybox = new THREE.Mesh(geometry, material);
+        // skybox.position.y = boxSize / 2;
+        // scene.add(skybox);
 
         // For high end VR devices like Vive and Oculus, take into account the stage
         // parameters provided.
@@ -580,7 +582,9 @@
                 if (scene.children[i].needsUpdate == 1) {
                     // update the geometry and color
                     scene.children[i].geometry.verticesNeedUpdate = true;
-                    THREE.ColorConverter.setHSV(scene.children[i].myMaterial.color, hueValues[scene.children[i].mySubset], DEF_SATURATION, DEF_BRIGHTNESS);
+                    // console.log("scene.children[i].myMaterial", i, scene.children[i].myMaterial)
+                    if(scene.children[i].myMaterial)
+                        THREE.ColorConverter.setHSV(scene.children[i].myMaterial.color, hueValues[scene.children[i].mySubset], DEF_SATURATION, DEF_BRIGHTNESS);
                     scene.children[i].needsUpdate = 0;
                 }
             }
